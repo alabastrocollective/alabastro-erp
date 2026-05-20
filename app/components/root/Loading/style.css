@@ -1,0 +1,41 @@
+.loader {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  animation: crossPulse 1.4s infinite ease-in-out;
+}
+
+.loader:before,
+.loader:after {
+  content: "";
+  position: absolute;
+  background: #2a4945;
+  border-radius: 6px;
+}
+
+.loader:before {
+  width: 14px;
+  height: 48px;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.loader:after {
+  width: 48px;
+  height: 14px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+@keyframes crossPulse {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}

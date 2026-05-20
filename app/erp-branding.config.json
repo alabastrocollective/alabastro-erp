@@ -1,0 +1,10 @@
+{
+  "appName": "ALABASTRO ERP",
+  "shortName": "ERP",
+  "primaryColor": "#525b56",
+  "accentColor": "#ba7c3e",
+  "secondaryColor": "#f6f0eb",
+  "logoPath": "/logo.png",
+  "logoLightPath": "/logo-light.png",
+  "faviconPath": "/icono.png"
+}
