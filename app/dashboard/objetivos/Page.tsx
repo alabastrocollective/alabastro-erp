@@ -9,6 +9,7 @@ import { createObjective, listObjectives, updateObjective } from "~/services/obj
 import type { ObjectiveRow, ObjectiveStatus } from "~/types/alabastro";
 import { OBJECTIVE_STATUS_LABELS } from "~/lib/alabastroLabels";
 import type { ObjectiveFilter } from "~/lib/objectiveUtils";
+import { STAT_TINT } from "~/lib/statCardStyles";
 import { cn } from "~/lib/utils";
 import { ObjectiveCard } from "~/dashboard/objetivos/ObjectiveCard";
 import {
@@ -97,7 +98,7 @@ export default function ObjetivosPage() {
             <Target className="size-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary-blue">Objetivos</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-primary-blue dark:text-foreground">Objetivos</h1>
             <p className="text-sm text-muted-foreground">
               Metas del collective: equipo, proyectos, ingresos y más.
             </p>
@@ -113,10 +114,10 @@ export default function ObjetivosPage() {
       </div>
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <SummaryStat label="Total" value={stats.total} className="bg-card" />
-        <SummaryStat label="En curso" value={stats.enCurso} className="bg-emerald-50/80 border-emerald-100" />
-        <SummaryStat label="Pendientes" value={stats.pendiente} className="bg-amber-50/80 border-amber-100" />
-        <SummaryStat label="Completados" value={stats.completado} className="bg-sky-50/80 border-sky-100" />
+        <SummaryStat label="Total" value={stats.total} className={STAT_TINT.card} />
+        <SummaryStat label="En curso" value={stats.enCurso} className={STAT_TINT.emerald} />
+        <SummaryStat label="Pendientes" value={stats.pendiente} className={STAT_TINT.amber} />
+        <SummaryStat label="Completados" value={stats.completado} className={STAT_TINT.sky} />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -189,7 +190,7 @@ function SummaryStat({
     <Card className={cn("border", className)}>
       <CardContent className="flex flex-col items-center justify-center py-5">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-        <p className="mt-1 text-3xl font-bold tabular-nums">{value}</p>
+        <p className="mt-1 text-3xl font-bold tabular-nums text-foreground">{value}</p>
       </CardContent>
     </Card>
   );

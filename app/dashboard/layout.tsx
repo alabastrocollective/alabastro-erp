@@ -12,6 +12,8 @@ import { FullPageLoader } from "~/components/FullPageLoader";
 import { Menu } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { DashboardRightAside } from "~/dashboard/DashboardRightAside";
+import { DashboardThemeShell } from "~/dashboard/DashboardThemeShell";
+import { DashboardThemeToggle } from "~/components/DashboardThemeToggle";
 
 function MobileMenuButton() {
   const { setOpenMobile } = useSidebar();
@@ -26,8 +28,12 @@ export default function DashboardLayout() {
   const { user, isAuthenticated, hasHydrated, login } = useAuthStore();
   const [checkingSession, setCheckingSession] = useState(!hasHydrated);
   const location = useLocation();
+  const isConfigPage = location.pathname === "/configuracion";
   const isWideContent =
-    location.pathname === "/" || /^\/proyectos/.test(location.pathname) || /^\/objetivos/.test(location.pathname);
+    location.pathname === "/" ||
+    /^\/proyectos/.test(location.pathname) ||
+    /^\/objetivos/.test(location.pathname) ||
+    isConfigPage;
 
   useEffect(() => {
     if (hasHydrated && isAuthenticated) {
@@ -55,17 +61,17 @@ export default function DashboardLayout() {
       "--sidebar-background": getPrimaryColor()
     } as React.CSSProperties}>
       <AppSidebar />
-      <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
+      <DashboardThemeShell>
         <main
           className={cn(
-            "flex min-h-0 min-w-0 flex-1 flex-col py-10 text-primary-blue sm:py-12",
+            "flex min-h-0 min-w-0 flex-1 flex-col py-10 text-foreground sm:py-12",
             isWideContent ? "px-3 sm:px-5" : "px-4 sm:px-8"
           )}
         >
           <div
             className={cn(
               "mx-auto flex w-full flex-1 flex-col gap-4",
-              isWideContent ? "max-w-none" : "max-w-5xl"
+              isWideContent ? (isConfigPage ? "max-w-6xl" : "max-w-none") : "max-w-5xl"
             )}
           >
             <div className="flex w-full items-center gap-2">
@@ -73,12 +79,15 @@ export default function DashboardLayout() {
                 <MobileMenuButton />
               </div>
               <div className="min-w-0 flex-1" aria-hidden />
+              <div className="shrink-0 lg:hidden">
+                <DashboardThemeToggle size="icon" />
+              </div>
             </div>
             <Outlet />
           </div>
         </main>
         <DashboardRightAside />
-      </div>
+      </DashboardThemeShell>
     </SidebarProvider>
   );
 }

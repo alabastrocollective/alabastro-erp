@@ -4,7 +4,7 @@ import { Calendar, GripVertical, Pencil, User } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import type { ProjectTaskRow, StaffMemberRow } from "~/types/alabastro";
 import { STAFF_CARGO_LABELS } from "~/lib/alabastroLabels";
-import { PersonAvatar } from "~/components/PersonAvatar";
+import { AssigneeBadge } from "~/components/AssigneeBadge";
 import { isDueOverdue } from "~/lib/projectUi";
 import { cn, formatDateOnly } from "~/lib/utils";
 
@@ -73,15 +73,12 @@ export function KanbanTaskCard({
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {assigneeName ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/50 py-0.5 pl-0.5 pr-2 text-[11px] font-medium">
-            <PersonAvatar
-              name={assigneeName}
-              avatarColor={assigneeAvatarColor}
-              avatarUrl={assigneeAvatarUrl}
-              size="xs"
-            />
-            <span className="max-w-[120px] truncate">{assigneeName}</span>
-          </span>
+          <AssigneeBadge
+            name={assigneeName}
+            avatarColor={assigneeAvatarColor}
+            avatarUrl={assigneeAvatarUrl}
+            size="xs"
+          />
         ) : (
           <span className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-foreground">
             <User className="size-3" />
@@ -102,7 +99,7 @@ export function KanbanTaskCard({
           </span>
         )}
         {assigneeCargo && (
-          <span className="rounded-full bg-secondary-blue px-2 py-0.5 text-[10px] text-primary-blue/80">
+          <span className="rounded-full bg-secondary-blue px-2 py-0.5 text-[10px] text-primary-blue/80 dark:bg-muted dark:text-muted-foreground">
             {assigneeCargo}
           </span>
         )}

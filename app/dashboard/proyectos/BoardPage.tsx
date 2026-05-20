@@ -287,7 +287,7 @@ export default function ProyectoBoardPage() {
               <LayoutGrid className="size-5 shrink-0" />
               <span className="text-xs font-semibold uppercase tracking-wider">Tablero Kanban</span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary-blue sm:text-3xl truncate">
+            <h1 className="text-2xl font-bold tracking-tight text-primary-blue dark:text-foreground sm:text-3xl truncate">
               {project.title}
             </h1>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

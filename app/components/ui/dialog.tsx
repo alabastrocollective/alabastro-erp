@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 
 import { cn } from "~/lib/utils"
+import { useDashboardDarkClass } from "~/lib/useDashboardDarkClass"
 
 function Dialog({
   ...props
@@ -57,13 +58,16 @@ function DialogContent({
   fullScreenOnMobile,
   ...props
 }: DialogContentProps) {
+  const dashboardDark = useDashboardDarkClass()
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed z-50 w-full border shadow-lg duration-200",
+          dashboardDark,
+          "bg-background text-foreground fixed z-50 w-full border border-border shadow-lg duration-200",
           fullScreenOnMobile
             ? cn(
                 /* Móvil primero: ocupar todo el viewport (forzar fixed por si className pasa position) */

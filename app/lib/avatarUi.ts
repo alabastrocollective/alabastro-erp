@@ -31,12 +31,43 @@ export function suggestAvatarColorId(seed: string): AvatarColorPresetId {
   return AVATAR_COLOR_PRESETS[Math.abs(hash) % AVATAR_COLOR_PRESETS.length].id;
 }
 
+export function resolveAvatarColorId(
+  colorId: string | null | undefined,
+  fallbackSeed: string
+): AvatarColorPresetId {
+  if (colorId && colorId in PRESET_BY_ID) return colorId as AvatarColorPresetId;
+  return suggestAvatarColorId(fallbackSeed);
+}
+
 export function avatarColorClassFromId(
   colorId: string | null | undefined,
   fallbackSeed: string
 ): string {
-  const id = (colorId && colorId in PRESET_BY_ID ? colorId : suggestAvatarColorId(fallbackSeed)) as AvatarColorPresetId;
-  return PRESET_BY_ID[id].className;
+  return PRESET_BY_ID[resolveAvatarColorId(colorId, fallbackSeed)].className;
+}
+
+/** Estilos de pill/tag para responsable (visible aunque el avatar sea foto). */
+export const AVATAR_TAG_CLASS: Record<AvatarColorPresetId, string> = {
+  accent:
+    "border-accent-blue/45 bg-accent-blue/12 text-primary-blue dark:border-accent-blue/50 dark:bg-accent-blue/18 dark:text-[#e8c9a8]",
+  sky: "border-sky-300/80 bg-sky-50 text-sky-900 dark:border-sky-500/40 dark:bg-sky-950/50 dark:text-sky-200",
+  violet:
+    "border-violet-300/80 bg-violet-50 text-violet-900 dark:border-violet-500/40 dark:bg-violet-950/50 dark:text-violet-200",
+  emerald:
+    "border-emerald-300/80 bg-emerald-50 text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-950/50 dark:text-emerald-200",
+  amber:
+    "border-amber-300/80 bg-amber-50 text-amber-900 dark:border-amber-500/40 dark:bg-amber-950/50 dark:text-amber-200",
+  rose: "border-rose-300/80 bg-rose-50 text-rose-900 dark:border-rose-500/40 dark:bg-rose-950/50 dark:text-rose-200",
+  indigo:
+    "border-indigo-300/80 bg-indigo-50 text-indigo-900 dark:border-indigo-500/40 dark:bg-indigo-950/50 dark:text-indigo-200",
+  teal: "border-teal-300/80 bg-teal-50 text-teal-900 dark:border-teal-500/40 dark:bg-teal-950/50 dark:text-teal-200",
+};
+
+export function avatarTagClassFromId(
+  colorId: string | null | undefined,
+  fallbackSeed: string
+): string {
+  return AVATAR_TAG_CLASS[resolveAvatarColorId(colorId, fallbackSeed)];
 }
 
 export function isAvatarColorPresetId(value: string): value is AvatarColorPresetId {

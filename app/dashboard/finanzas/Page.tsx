@@ -274,11 +274,11 @@ export default function FinanzasPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-blue/10 text-primary-blue">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-blue/10 text-primary-blue dark:bg-accent-blue/15 dark:text-[#e8c9a8]">
             <FileSpreadsheet className="size-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary-blue">Finanzas</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-primary-blue dark:text-foreground">Finanzas</h1>
             <p className="text-sm text-muted-foreground">Balance mensual · montos en USD</p>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function FinanzasPage() {
               <ChevronLeft className="size-5" />
             </Button>
             <p className="min-w-[200px] text-center text-sm font-medium capitalize sm:text-base">
-              Balance mes: <span className="font-semibold text-primary-blue">{monthTitle}</span>
+              Balance mes: <span className="font-semibold text-primary-blue dark:text-foreground">{monthTitle}</span>
             </p>
             <Button type="button" variant="outline" size="icon" onClick={() => shiftMonth(1)} aria-label="Mes siguiente">
               <ChevronRight className="size-5" />
@@ -349,7 +349,7 @@ export default function FinanzasPage() {
                 <Wallet className="size-8 text-muted-foreground/60" />
               </CardContent>
             </Card>
-            <Card className="border bg-emerald-50/80 dark:bg-emerald-950/20">
+            <Card className="border bg-emerald-50/80 dark:bg-emerald-950/40 dark:border-emerald-800/50">
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div>
                   <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
@@ -358,12 +358,12 @@ export default function FinanzasPage() {
                   <p className="mt-1 text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
                     {formatUsd(b.totalEntradasUsd)}
                   </p>
-                  <p className="text-xs text-emerald-700/80 mt-0.5">{b.countEntradas} registros</p>
+                  <p className="text-xs text-emerald-700/80 dark:text-emerald-400/90 mt-0.5">{b.countEntradas} registros</p>
                 </div>
                 <ArrowUpRight className="size-8 text-emerald-600/70" />
               </CardContent>
             </Card>
-            <Card className="border bg-red-50/80 dark:bg-red-950/20">
+            <Card className="border bg-red-50/80 dark:bg-red-950/40 dark:border-red-800/50">
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div>
                   <p className="text-xs font-medium text-red-800 dark:text-red-300 uppercase tracking-wide">
@@ -372,7 +372,7 @@ export default function FinanzasPage() {
                   <p className="mt-1 text-xl font-bold tabular-nums text-red-700 dark:text-red-400">
                     {formatUsd(b.totalSalidasUsd)}
                   </p>
-                  <p className="text-xs text-red-700/80 mt-0.5">{b.countSalidas} registros</p>
+                  <p className="text-xs text-red-700/80 dark:text-red-400/90 mt-0.5">{b.countSalidas} registros</p>
                 </div>
                 <ArrowDownRight className="size-8 text-red-600/70" />
               </CardContent>
@@ -388,7 +388,7 @@ export default function FinanzasPage() {
                   </div>
                   <div className="border-t pt-2 flex justify-between gap-4">
                     <span className="font-medium">Saldo total</span>
-                    <span className="font-bold tabular-nums text-primary-blue">{formatUsd(b.saldoTotalUsd)}</span>
+                    <span className="font-bold tabular-nums text-primary-blue dark:text-foreground">{formatUsd(b.saldoTotalUsd)}</span>
                   </div>
                 </div>
                 <DollarSign className="size-8 text-muted-foreground/50 shrink-0" />
@@ -423,11 +423,13 @@ export default function FinanzasPage() {
 
           {/* Barra saldo + export */}
           <div
-            className="flex flex-col gap-3 rounded-xl px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-            style={{ backgroundColor: "var(--color-primary-blue)" }}
+            className={cn(
+              "flex flex-col gap-3 rounded-xl border px-5 py-4 sm:flex-row sm:items-center sm:justify-between",
+              "bg-[#525b56] text-white dark:bg-card dark:border-border dark:text-foreground"
+            )}
           >
-            <span className="text-sm font-bold uppercase tracking-wider text-white">Saldo actual</span>
-            <span className="text-2xl sm:text-3xl font-bold tabular-nums text-emerald-300">
+            <span className="text-sm font-bold uppercase tracking-wider">Saldo actual</span>
+            <span className="text-2xl sm:text-3xl font-bold tabular-nums text-emerald-300 dark:text-emerald-400">
               {formatUsd(b.saldoTotalUsd)}
             </span>
           </div>
@@ -593,12 +595,21 @@ function MovementSection({
 }) {
   const isIngreso = variant === "ingreso";
   const Icon = isIngreso ? ArrowUpRight : ArrowDownRight;
-  const headerColor = isIngreso ? "text-emerald-700" : "text-red-700";
-  const footerBg = isIngreso ? "bg-emerald-50" : "bg-red-50";
-  const amountColor = isIngreso ? "text-emerald-700" : "text-red-700";
+  const headerColor = isIngreso
+    ? "text-emerald-700 dark:text-emerald-300"
+    : "text-red-700 dark:text-red-300";
+  const footerBg = isIngreso
+    ? "bg-emerald-50 dark:bg-emerald-950/55"
+    : "bg-red-50 dark:bg-red-950/55";
+  const footerText = isIngreso
+    ? "text-emerald-900 dark:text-emerald-100"
+    : "text-red-900 dark:text-red-100";
+  const amountColor = isIngreso
+    ? "text-emerald-700 dark:text-emerald-300"
+    : "text-red-700 dark:text-red-300";
   const badgeClass = isIngreso
-    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-    : "bg-red-100 text-red-800 border-red-200";
+    ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800/60"
+    : "bg-red-100 text-red-800 border-red-200 dark:bg-red-950/60 dark:text-red-200 dark:border-red-800/60";
 
   return (
     <Card className="border shadow-sm overflow-hidden">
@@ -666,7 +677,9 @@ function MovementSection({
               </TableRow>
             )}
             <TableRow className={cn(footerBg, "hover:bg-inherit font-semibold")}>
-              <TableCell colSpan={4}>{totalLabel}</TableCell>
+              <TableCell colSpan={4} className={footerText}>
+                {totalLabel}
+              </TableCell>
               <TableCell className={cn("text-right tabular-nums", amountColor)}>{formatUsd(totalAmount)}</TableCell>
               <TableCell />
             </TableRow>

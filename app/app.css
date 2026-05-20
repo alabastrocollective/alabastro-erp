@@ -122,6 +122,28 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Panel central + barra derecha (Alabastro); menú izquierdo sin cambios */
+.dark.dashboard-panel {
+  --background: oklch(0.2 0.012 155);
+  --foreground: oklch(0.93 0.012 85);
+  --card: oklch(0.26 0.014 155);
+  --card-foreground: oklch(0.93 0.012 85);
+  --popover: oklch(0.26 0.014 155);
+  --popover-foreground: oklch(0.93 0.012 85);
+  --secondary: oklch(0.3 0.014 155);
+  --secondary-foreground: oklch(0.93 0.012 85);
+  --muted: oklch(0.28 0.012 155);
+  --muted-foreground: oklch(0.72 0.02 85);
+  --accent: oklch(0.32 0.02 155);
+  --accent-foreground: oklch(0.93 0.012 85);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.65 0.08 75);
+  --color-primary-blue: #d8d2cb;
+  --color-secondary-blue: #2e3532;
+  --color-soft-blue: #1e2422;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

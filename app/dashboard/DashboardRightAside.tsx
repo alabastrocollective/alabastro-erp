@@ -20,6 +20,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { getAppRole, useAuthStore } from "~/store/authStore";
+import { DashboardThemeToggle } from "~/components/DashboardThemeToggle";
 import { PersonAvatar } from "~/components/PersonAvatar";
 import { cn } from "~/lib/utils";
 
@@ -58,10 +59,16 @@ export function DashboardRightAside() {
   return (
     <aside
       className={cn(
-        "sticky top-0 z-0 hidden h-svh w-[min(100%,20rem)] shrink-0 flex-col border-l border-border/60 bg-muted/35 backdrop-blur-[2px] sm:w-80 lg:flex"
+        "sticky top-0 z-0 hidden h-svh w-[min(100%,20rem)] shrink-0 flex-col border-l border-border/60",
+        "bg-muted/35 backdrop-blur-[2px] dark:bg-card/40 dark:backdrop-blur-sm sm:w-80 lg:flex"
       )}
     >
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-10 sm:px-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium text-muted-foreground">Apariencia</p>
+          <DashboardThemeToggle size="icon" />
+        </div>
+
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Perfil del usuario
@@ -112,8 +119,8 @@ export function DashboardRightAside() {
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
                     active
-                      ? "bg-primary-blue/10 font-medium text-primary-blue"
-                      : "text-foreground hover:bg-muted"
+                      ? "bg-primary-blue/10 font-medium text-primary-blue dark:bg-accent-blue/20 dark:text-[#e8c9a8]"
+                      : "text-foreground hover:bg-muted dark:hover:bg-muted/80"
                   )}
                 >
                   <item.icon className="size-4 shrink-0 opacity-80" />

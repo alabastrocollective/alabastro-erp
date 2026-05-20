@@ -36,6 +36,7 @@ import {
   objectiveProgressPercent,
   objectiveRemaining,
 } from "~/lib/objectiveUtils";
+import { STAT_TINT } from "~/lib/statCardStyles";
 import { cn, formatDateOnly } from "~/lib/utils";
 import {
   ObjectiveFormDialog,
@@ -253,8 +254,8 @@ export default function ObjetivoDetailPage() {
         <KpiCard
           label="Progreso actual"
           value={formatObjectiveAmount(Number(objective.current_progress), objective.objective_kind, objective.unit_label)}
-          className="bg-amber-50/80 border-amber-100"
-          valueClassName="text-accent-blue"
+          className={STAT_TINT.amber}
+          valueClassName="text-accent-blue dark:text-[#e8c9a8]"
         />
         <KpiCard
           label="Meta"
@@ -263,7 +264,7 @@ export default function ObjetivoDetailPage() {
               ? formatObjectiveAmount(Number(objective.target_number), objective.objective_kind, objective.unit_label)
               : "—"
           }
-          className="bg-card"
+          className={STAT_TINT.card}
         />
         <KpiCard
           label="Restante"
@@ -272,12 +273,12 @@ export default function ObjetivoDetailPage() {
               ? formatObjectiveAmount(remaining, objective.objective_kind, objective.unit_label)
               : "—"
           }
-          className="bg-emerald-50/80 border-emerald-100"
+          className={STAT_TINT.emerald}
         />
         <KpiCard
           label="% completado"
           value={pct != null ? `${pct}%` : "—"}
-          className="bg-sky-50/80 border-sky-100"
+          className={STAT_TINT.sky}
         />
       </div>
 
@@ -426,8 +427,8 @@ function KpiCard({
   return (
     <Card className={cn("border", className)}>
       <CardContent className="py-4">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-        <p className={cn("mt-1 text-lg font-bold tabular-nums", valueClassName)}>{value}</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+        <p className={cn("mt-1 text-lg font-bold tabular-nums text-foreground", valueClassName)}>{value}</p>
       </CardContent>
     </Card>
   );

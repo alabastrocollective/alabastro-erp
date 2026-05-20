@@ -30,7 +30,7 @@ import { listProjects } from "~/services/projectsService";
 import { listStaffMembers } from "~/services/staffService";
 import type { ProjectRow, ProjectTaskWithProject, TaskStatus } from "~/types/alabastro";
 import { TASK_STATUSES, TASK_STATUS_LABELS } from "~/lib/alabastroLabels";
-import { PersonAvatar } from "~/components/PersonAvatar";
+import { AssigneeBadge } from "~/components/AssigneeBadge";
 import { TASK_COLUMN_UI, isDueOverdue } from "~/lib/projectUi";
 import { cn, formatDateOnly } from "~/lib/utils";
 
@@ -121,7 +121,7 @@ export default function TasksBacklogPage() {
             <ClipboardList className="size-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary-blue">Tareas</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-primary-blue dark:text-foreground">Tareas</h1>
             <p className="text-muted-foreground text-sm max-w-xl">
               Backlog de todas las tareas del estudio. Filtra por proyecto, responsable o estado.
             </p>
@@ -283,15 +283,12 @@ export default function TasksBacklogPage() {
                       </TableCell>
                       <TableCell>
                         {assignee ? (
-                          <span className="inline-flex items-center gap-2 text-sm">
-                            <PersonAvatar
-                              name={assignee}
-                              avatarColor={t.staff_members?.avatar_color}
-                              avatarUrl={t.staff_members?.avatar_url}
-                              size="sm"
-                            />
-                            {assignee}
-                          </span>
+                          <AssigneeBadge
+                            name={assignee}
+                            avatarColor={t.staff_members?.avatar_color}
+                            avatarUrl={t.staff_members?.avatar_url}
+                            size="sm"
+                          />
                         ) : (
                           <span className="text-sm text-muted-foreground">Sin asignar</span>
                         )}
@@ -346,7 +343,11 @@ function MiniStat({
     <div
       className={cn(
         "rounded-xl border px-3 py-2.5",
-        warn ? "border-red-200 bg-red-50/80" : accent ? "border-accent-blue/25 bg-accent-blue/5" : "bg-card"
+        warn
+          ? "border-red-200 bg-red-50/80 dark:border-red-900/50 dark:bg-red-950/40"
+          : accent
+            ? "border-accent-blue/25 bg-accent-blue/5 dark:border-accent-blue/30 dark:bg-accent-blue/10"
+            : "bg-card"
       )}
     >
       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>

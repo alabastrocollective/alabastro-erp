@@ -277,7 +277,7 @@ export default function ProyectosPage() {
             <FolderKanban className="size-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary-blue">Proyectos</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-primary-blue dark:text-foreground">Proyectos</h1>
             <p className="text-muted-foreground text-sm max-w-lg">
               Vista general de producción. Abre cualquier tarjeta para gestionar el tablero Kanban.
             </p>

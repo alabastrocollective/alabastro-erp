@@ -6,6 +6,8 @@ import { useAuthStore, getAppRole, type User } from "~/store/authStore";
 import { changePasswordWithCurrent, updateUserProfile } from "~/services/authService";
 import { uploadAvatarFile, userAvatarPath } from "~/services/avatarStorageService";
 import { AvatarProfileFields } from "~/components/AvatarProfileFields";
+import { DashboardThemeToggle } from "~/components/DashboardThemeToggle";
+import { useDashboardThemeStore } from "~/store/dashboardThemeStore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -26,6 +28,7 @@ type UserMeta = {
 
 export default function ConfiguracionPage() {
   const { user, login } = useAuthStore();
+  const dashboardTheme = useDashboardThemeStore((s) => s.theme);
   const meta = (user?.user_metadata ?? {}) as UserMeta;
 
   const [fullName, setFullName] = useState(meta.full_name ?? "");
@@ -122,10 +125,75 @@ export default function ConfiguracionPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-lg">
+    <div className="w-full space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
         <p className="text-muted-foreground text-sm">Tu cuenta, avatar y contraseña.</p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Apariencia del panel</CardTitle>
+            <CardDescription>
+              Modo oscuro para el contenido central y la barra derecha. El menú lateral se mantiene igual.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              Actual:{" "}
+              <span className="font-medium text-foreground">
+                {dashboardTheme === "dark" ? "Oscuro" : "Claro"}
+              </span>
+            </p>
+            <DashboardThemeToggle showLabel />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Cambiar contraseña</CardTitle>
+            <CardDescription>Se verifica la contraseña actual antes de guardar.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={(e) => void submitPassword(e)} className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pw-current">Contraseña actual</Label>
+                <Input
+                  id="pw-current"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPw}
+                  onChange={(e) => setCurrentPw(e.target.value)}
+                />
+              </div>
+              <Separator />
+              <div className="grid gap-2">
+                <Label htmlFor="pw-new">Nueva contraseña</Label>
+                <Input
+                  id="pw-new"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pw-new2">Confirmar nueva</Label>
+                <Input
+                  id="pw-new2"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPw2}
+                  onChange={(e) => setNewPw2(e.target.value)}
+                />
+              </div>
+              <Button type="submit" disabled={savingPw}>
+                {savingPw ? "Guardando…" : "Actualizar contraseña"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -135,82 +203,41 @@ export default function ConfiguracionPage() {
             Foto y color que se muestran en la barra lateral. Los responsables en tareas se configuran en Personal.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <AvatarProfileFields
-            displayName={fullName || user?.email || "Usuario"}
-            avatarColor={avatarColor}
-            avatarUrl={avatarUrl}
-            previewUrl={avatarPreview}
-            onColorChange={setAvatarColor}
-            onPickFile={(file) => {
-              setPendingAvatarFile(file);
-              setAvatarPreview(URL.createObjectURL(file));
-            }}
-            onClearPhoto={() => {
-              setPendingAvatarFile(null);
-              setAvatarPreview(null);
-              setAvatarUrl("");
-            }}
-          />
-          <div className="grid gap-2">
-            <Label htmlFor="cfg-name">Nombre para mostrar</Label>
-            <Input
-              id="cfg-name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+        <CardContent className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start">
+            <AvatarProfileFields
+              displayName={fullName || user?.email || "Usuario"}
+              avatarColor={avatarColor}
+              avatarUrl={avatarUrl}
+              previewUrl={avatarPreview}
+              onColorChange={setAvatarColor}
+              onPickFile={(file) => {
+                setPendingAvatarFile(file);
+                setAvatarPreview(URL.createObjectURL(file));
+              }}
+              onClearPhoto={() => {
+                setPendingAvatarFile(null);
+                setAvatarPreview(null);
+                setAvatarUrl("");
+              }}
             />
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="cfg-name">Nombre para mostrar</Label>
+                <Input
+                  id="cfg-name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Correo: {user?.email ?? "—"} · Rol: {user ? getAppRole(user) : "—"}
+              </p>
+              <Button type="button" disabled={savingProfile} onClick={() => void submitProfile()}>
+                {savingProfile ? "Guardando…" : "Guardar perfil"}
+              </Button>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Correo: {user?.email ?? "—"} · Rol: {user ? getAppRole(user) : "—"}
-          </p>
-          <Button type="button" disabled={savingProfile} onClick={() => void submitProfile()}>
-            {savingProfile ? "Guardando…" : "Guardar perfil"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Cambiar contraseña</CardTitle>
-          <CardDescription>Se verifica la contraseña actual antes de guardar.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={(e) => void submitPassword(e)} className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="pw-current">Contraseña actual</Label>
-              <Input
-                id="pw-current"
-                type="password"
-                autoComplete="current-password"
-                value={currentPw}
-                onChange={(e) => setCurrentPw(e.target.value)}
-              />
-            </div>
-            <Separator />
-            <div className="grid gap-2">
-              <Label htmlFor="pw-new">Nueva contraseña</Label>
-              <Input
-                id="pw-new"
-                type="password"
-                autoComplete="new-password"
-                value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="pw-new2">Confirmar nueva</Label>
-              <Input
-                id="pw-new2"
-                type="password"
-                autoComplete="new-password"
-                value={newPw2}
-                onChange={(e) => setNewPw2(e.target.value)}
-              />
-            </div>
-            <Button type="submit" disabled={savingPw}>
-              {savingPw ? "Guardando…" : "Actualizar contraseña"}
-            </Button>
-          </form>
         </CardContent>
       </Card>
     </div>
