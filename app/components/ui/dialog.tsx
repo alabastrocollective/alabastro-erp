@@ -74,7 +74,7 @@ function DialogContent({
                 "!fixed !inset-0 !left-0 !right-0 !top-0 !bottom-0 flex !h-[100dvh] !max-h-[100dvh] !w-full !max-w-none flex-col overflow-hidden rounded-none border-0 p-0 !m-0 translate-x-0 translate-y-0 gap-0",
                 "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
                 "sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
-                "sm:!inset-auto sm:!top-[50%] sm:!left-[50%] sm:!right-auto sm:!bottom-auto sm:!h-auto sm:!max-h-[92vh] sm:!w-full sm:!max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:border sm:p-6 sm:shadow-lg sm:gap-4 sm:overflow-y-auto"
+                "sm:!inset-auto sm:!top-[50%] sm:!left-[50%] sm:!right-auto sm:!bottom-auto sm:!h-auto sm:!max-h-[92vh] sm:!w-[calc(100%-2rem)] sm:!max-w-[calc(100%-2rem)] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:border sm:p-0 sm:shadow-lg sm:gap-0 sm:overflow-hidden"
               )
             : cn(
                 "grid gap-4 p-6",

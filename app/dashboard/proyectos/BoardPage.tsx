@@ -2,28 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, Calendar, LayoutGrid, Music, Plus, Search, Trash2, Video } from "lucide-react";
+import { ArrowLeft, Calendar, LayoutGrid, Music, Plus, Search, Video } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Textarea } from "~/components/ui/textarea";
 import { Badge } from "~/components/ui/badge";
 import { KanbanTaskCard, resolveAssignee } from "~/dashboard/proyectos/KanbanTaskCard";
+import { TaskDetailDialog } from "~/dashboard/proyectos/TaskDetailDialog";
+import { useCurrentStaffMember } from "~/hooks/useCurrentStaffMember";
 import { ProyectosSubNav } from "~/dashboard/proyectos/ProyectosSubNav";
 import {
   PACKAGE_CATEGORY_UI,
@@ -45,7 +31,6 @@ import type { ProjectRow, ProjectTaskRow, StaffMemberRow, TaskStatus } from "~/t
 import {
   PACKAGE_CATEGORY_LABELS,
   PROJECT_STATUS_LABELS,
-  STAFF_CARGO_LABELS,
   TASK_STATUSES,
   TASK_STATUS_LABELS,
 } from "~/lib/alabastroLabels";
@@ -75,6 +60,7 @@ export default function ProyectoBoardPage() {
   const [taskSearch, setTaskSearch] = useState("");
 
   const staffById = useMemo(() => new Map(staff.map((s) => [s.id, s])), [staff]);
+  const { staffMember: currentStaffMember, loading: staffLinkLoading } = useCurrentStaffMember();
 
   const boardStats = useMemo(() => {
     const total = tasks.length;
@@ -394,7 +380,7 @@ export default function ProyectoBoardPage() {
                         assigneeAvatarUrl={avatarUrl}
                         assigneeCargo={cargoLabel}
                         dragging={draggingId === task.id}
-                        onEdit={() => openEdit(task)}
+                        onOpen={() => openEdit(task)}
                         onDragStart={setDraggingId}
                         onDragEnd={() => setDraggingId(null)}
                       />
@@ -415,179 +401,60 @@ export default function ProyectoBoardPage() {
         </div>
       </div>
 
-      <Dialog open={addColumn !== null} onOpenChange={(o) => !o && setAddColumn(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Nueva tarea — {addColumn ? TASK_STATUS_LABELS[addColumn] : ""}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="task-title">Título</Label>
-              <Input
-                id="task-title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Ej. Grabar voces principales"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="task-desc">Descripción (opcional)</Label>
-              <Textarea
-                id="task-desc"
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-            <TaskMetaFields
-              staff={staff}
-              assigneeId={newMeta.assigneeId}
-              dueOn={newMeta.dueOn}
-              onAssigneeChange={(assigneeId) => setNewMeta((m) => ({ ...m, assigneeId }))}
-              onDueOnChange={(dueOn) => setNewMeta((m) => ({ ...m, dueOn }))}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddColumn(null)}>
-              Cancelar
-            </Button>
-            <Button type="button" disabled={savingTask} onClick={() => void saveNewTask()}>
-              {savingTask ? "Creando…" : "Crear"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TaskDetailDialog
+        open={addColumn !== null}
+        onOpenChange={(o) => !o && setAddColumn(null)}
+        mode="create"
+        project={project}
+        task={null}
+        initialStatus={addColumn ?? undefined}
+        staff={staff}
+        currentStaffMember={currentStaffMember}
+        staffLinkLoading={staffLinkLoading}
+        title={newTitle}
+        description={newDescription}
+        meta={newMeta}
+        saving={savingTask}
+        onTitleChange={setNewTitle}
+        onDescriptionChange={setNewDescription}
+        onMetaChange={(patch) => setNewMeta((m) => ({ ...m, ...patch }))}
+        onSave={() => void saveNewTask()}
+      />
 
-      <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar tarea</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 py-2">
-            <div className="grid gap-2">
-              <Label>Estado</Label>
-              <div className="flex flex-wrap gap-2">
-                {TASK_STATUSES.map((s) => (
-                  <Button
-                    key={s}
-                    type="button"
-                    size="sm"
-                    variant={editing?.status === s ? "default" : "outline"}
-                    onClick={() => {
-                      if (!editing) return;
-                      void (async () => {
-                        const col = tasksByStatus.get(s) ?? [];
-                        const { data, error } = await moveTask(editing.id, s, col.length);
-                        if (error) {
-                          toast.error(error.message);
-                          return;
-                        }
-                        if (data) {
-                          setTasks((prev) => prev.map((t) => (t.id === data.id ? data : t)));
-                          setEditing(data);
-                        }
-                      })();
-                    }}
-                  >
-                    {TASK_STATUS_LABELS[s]}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-title">Título</Label>
-              <Input id="edit-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-desc">Descripción</Label>
-              <Textarea
-                id="edit-desc"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-            <TaskMetaFields
-              staff={staff}
-              assigneeId={editMeta.assigneeId}
-              dueOn={editMeta.dueOn}
-              onAssigneeChange={(assigneeId) => setEditMeta((m) => ({ ...m, assigneeId }))}
-              onDueOnChange={(dueOn) => setEditMeta((m) => ({ ...m, dueOn }))}
-            />
-          </div>
-          <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2">
-            <Button
-              type="button"
-              variant="destructive"
-              className="gap-1 sm:mr-auto"
-              onClick={() => editing && void removeTask(editing)}
-            >
-              <Trash2 className="size-4" />
-              Eliminar
-            </Button>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                Cancelar
-              </Button>
-              <Button type="button" disabled={savingTask} onClick={() => void saveEdit()}>
-                {savingTask ? "Guardando…" : "Guardar"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TaskDetailDialog
+        open={editing !== null}
+        onOpenChange={(o) => !o && setEditing(null)}
+        mode="edit"
+        project={project}
+        task={editing}
+        staff={staff}
+        currentStaffMember={currentStaffMember}
+        staffLinkLoading={staffLinkLoading}
+        title={editTitle}
+        description={editDescription}
+        meta={editMeta}
+        saving={savingTask}
+        onTitleChange={setEditTitle}
+        onDescriptionChange={setEditDescription}
+        onMetaChange={(patch) => setEditMeta((m) => ({ ...m, ...patch }))}
+        onStatusChange={(status) => {
+          if (!editing) return;
+          void (async () => {
+            const col = tasksByStatus.get(status) ?? [];
+            const { data, error } = await moveTask(editing.id, status, col.length);
+            if (error) {
+              toast.error(error.message);
+              return;
+            }
+            if (data) {
+              setTasks((prev) => prev.map((t) => (t.id === data.id ? data : t)));
+              setEditing(data);
+            }
+          })();
+        }}
+        onSave={() => void saveEdit()}
+        onDelete={() => editing && void removeTask(editing)}
+      />
     </div>
-  );
-}
-
-function TaskMetaFields({
-  staff,
-  assigneeId,
-  dueOn,
-  onAssigneeChange,
-  onDueOnChange,
-}: {
-  staff: StaffMemberRow[];
-  assigneeId: string;
-  dueOn: string;
-  onAssigneeChange: (id: string) => void;
-  onDueOnChange: (date: string) => void;
-}) {
-  return (
-    <>
-      <div className="grid gap-2">
-        <Label>Responsable</Label>
-        <Select value={assigneeId} onValueChange={onAssigneeChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sin asignar" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={STAFF_UNASSIGNED}>Sin asignar</SelectItem>
-            {staff.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
-                {s.cargo ? ` · ${STAFF_CARGO_LABELS[s.cargo]}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {staff.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Registra personas en Personal para asignar responsables.
-          </p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="task-due">Fecha de vencimiento</Label>
-        <Input
-          id="task-due"
-          type="date"
-          value={dueOn}
-          onChange={(e) => onDueOnChange(e.target.value)}
-        />
-      </div>
-    </>
   );
 }

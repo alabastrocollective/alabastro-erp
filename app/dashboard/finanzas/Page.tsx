@@ -270,7 +270,7 @@ export default function FinanzasPage() {
   };
 
   return (
-    <div className="space-y-5 -mx-1 sm:mx-0">
+    <div className="w-full space-y-5">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex gap-3">
@@ -397,7 +397,7 @@ export default function FinanzasPage() {
           </div>
 
           {/* Tablas entradas / salidas */}
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 xl:grid-cols-2">
             <MovementSection
               title="Entradas"
               variant="ingreso"
@@ -627,10 +627,10 @@ function MovementSection({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[100px]">Fecha</TableHead>
-              <TableHead>Categoría</TableHead>
-              <TableHead>Descripción</TableHead>
-              <TableHead>Persona</TableHead>
+              <TableHead className="w-[108px] shrink-0">Fecha</TableHead>
+              <TableHead className="min-w-[120px]">Categoría</TableHead>
+              <TableHead className="min-w-[160px]">Descripción</TableHead>
+              <TableHead className="min-w-[120px]">Persona</TableHead>
               <TableHead className="text-right">Monto</TableHead>
               <TableHead className="w-[72px]" />
             </TableRow>
@@ -651,8 +651,8 @@ function MovementSection({
                       {categoryLabel(r.category)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="max-w-[140px] truncate text-sm">{movementDescription(r)}</TableCell>
-                  <TableCell className="max-w-[120px] truncate text-sm">{movementPerson(r)}</TableCell>
+                  <TableCell className="max-w-[280px] truncate text-sm xl:max-w-none">{movementDescription(r)}</TableCell>
+                  <TableCell className="max-w-[160px] truncate text-sm xl:max-w-none">{movementPerson(r)}</TableCell>
                   <TableCell className={cn("text-right font-medium tabular-nums whitespace-nowrap", amountColor)}>
                     {isIngreso ? "+" : "−"} {formatUsd(r.amount_usd)}
                   </TableCell>

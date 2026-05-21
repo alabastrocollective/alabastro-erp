@@ -6,6 +6,7 @@ import { useAuthStore, getAppRole, type User } from "~/store/authStore";
 import { changePasswordWithCurrent, updateUserProfile } from "~/services/authService";
 import { uploadAvatarFile, userAvatarPath } from "~/services/avatarStorageService";
 import { AvatarProfileFields } from "~/components/AvatarProfileFields";
+import { StaffAccountLinkSection } from "~/components/StaffAccountLinkSection";
 import { DashboardThemeToggle } from "~/components/DashboardThemeToggle";
 import { useDashboardThemeStore } from "~/store/dashboardThemeStore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
@@ -128,7 +129,7 @@ export default function ConfiguracionPage() {
     <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Configuración</h1>
-        <p className="text-muted-foreground text-sm">Tu cuenta, avatar y contraseña.</p>
+        <p className="text-muted-foreground text-sm">Tu cuenta, vínculo con Personal, avatar y contraseña.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -198,9 +199,23 @@ export default function ConfiguracionPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Cuenta y Personal</CardTitle>
+          <CardDescription>
+            Vincula tu usuario de acceso con tu ficha del equipo para comentar en tareas con tu nombre y avatar de
+            Personal.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StaffAccountLinkSection />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Mi perfil</CardTitle>
           <CardDescription>
-            Foto y color que se muestran en la barra lateral. Los responsables en tareas se configuran en Personal.
+            Foto y color de la barra lateral (usuario Auth). El color en tarjetas del tablero sigue la ficha de
+            Personal si estás vinculado.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

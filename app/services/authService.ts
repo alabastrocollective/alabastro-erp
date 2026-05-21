@@ -54,12 +54,16 @@ export async function updateUserProfile(metadata: {
   full_name?: string;
   avatar_url?: string | null;
   avatar_color?: string | null;
+  staff_member_id?: string | null;
 }) {
   const { data, error } = await supabase.auth.updateUser({
     data: {
       ...(metadata.full_name !== undefined ? { full_name: metadata.full_name.trim() } : {}),
       ...(metadata.avatar_url !== undefined ? { avatar_url: metadata.avatar_url } : {}),
       ...(metadata.avatar_color !== undefined ? { avatar_color: metadata.avatar_color } : {}),
+      ...(metadata.staff_member_id !== undefined
+        ? { staff_member_id: metadata.staff_member_id }
+        : {}),
     },
   });
   if (error) return { user: null, error: new Error(error.message) };

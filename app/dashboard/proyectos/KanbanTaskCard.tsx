@@ -1,7 +1,6 @@
 "use client";
 
-import { Calendar, GripVertical, Pencil, User } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { Calendar, GripVertical, User } from "lucide-react";
 import type { ProjectTaskRow, StaffMemberRow } from "~/types/alabastro";
 import { STAFF_CARGO_LABELS } from "~/lib/alabastroLabels";
 import { AssigneeBadge } from "~/components/AssigneeBadge";
@@ -15,7 +14,7 @@ export function KanbanTaskCard({
   assigneeAvatarUrl,
   assigneeCargo,
   dragging,
-  onEdit,
+  onOpen,
   onDragStart,
   onDragEnd,
 }: {
@@ -25,7 +24,7 @@ export function KanbanTaskCard({
   assigneeAvatarUrl?: string | null;
   assigneeCargo?: string | null;
   dragging: boolean;
-  onEdit: () => void;
+  onOpen: () => void;
   onDragStart: (taskId: string) => void;
   onDragEnd: () => void;
 }) {
@@ -33,21 +32,37 @@ export function KanbanTaskCard({
 
   return (
     <div
-      draggable
-      onDragStart={(e) => {
-        onDragStart(task.id);
-        e.dataTransfer.setData("text/task-id", task.id);
-        e.dataTransfer.effectAllowed = "move";
-      }}
       onDragEnd={onDragEnd}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={cn(
-        "group rounded-xl border border-border/60 bg-card p-3.5 shadow-sm transition-shadow cursor-grab active:cursor-grabbing",
+        "group rounded-xl border border-border/60 bg-card p-3.5 shadow-sm transition-shadow cursor-pointer",
         "hover:border-accent-blue/25 hover:shadow-md",
         dragging && "opacity-55 ring-2 ring-accent-blue/35 shadow-md"
       )}
     >
       <div className="flex items-start gap-2">
-        <GripVertical className="size-4 shrink-0 text-muted-foreground/40 mt-0.5" />
+        <span
+          draggable
+          onDragStart={(e) => {
+            onDragStart(task.id);
+            e.dataTransfer.setData("text/task-id", task.id);
+            e.dataTransfer.effectAllowed = "move";
+            e.stopPropagation();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex shrink-0 cursor-grab active:cursor-grabbing"
+          aria-label="Arrastrar tarea"
+        >
+          <GripVertical className="size-4 text-muted-foreground/40 mt-0.5" />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold leading-snug text-foreground">{task.title}</p>
           {task.description && (
@@ -56,19 +71,6 @@ export function KanbanTaskCard({
             </p>
           )}
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity -mr-1"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          aria-label="Editar tarea"
-        >
-          <Pencil className="size-3.5" />
-        </Button>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">

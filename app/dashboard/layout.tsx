@@ -31,8 +31,7 @@ export default function DashboardLayout() {
   const isConfigPage = location.pathname === "/configuracion";
   const isWideContent =
     location.pathname === "/" ||
-    /^\/proyectos/.test(location.pathname) ||
-    /^\/objetivos/.test(location.pathname) ||
+    /^\/(proyectos|objetivos|finanzas|personal|clientes)(\/|$)/.test(location.pathname) ||
     isConfigPage;
 
   useEffect(() => {

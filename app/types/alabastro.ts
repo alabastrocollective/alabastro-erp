@@ -36,8 +36,19 @@ export interface StaffMemberRow {
   cargo: StaffCargo | null;
   avatar_color: string | null;
   avatar_url: string | null;
+  auth_user_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProjectTaskCommentRow {
+  id: string;
+  task_id: string;
+  staff_member_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  staff_members?: Pick<StaffMemberRow, "id" | "name" | "cargo" | "avatar_color" | "avatar_url"> | null;
 }
 
 export interface ServicePackageRow {
