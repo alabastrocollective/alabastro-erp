@@ -29,6 +29,7 @@ import { createTaskComment, deleteTaskComment, listTaskComments } from "~/servic
 import type { ProjectRow, ProjectTaskCommentRow, ProjectTaskRow, StaffMemberRow, TaskStatus } from "~/types/alabastro";
 import { STAFF_CARGO_LABELS, TASK_STATUSES, TASK_STATUS_LABELS } from "~/lib/alabastroLabels";
 import { TASK_COLUMN_UI } from "~/lib/projectUi";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 import { cn } from "~/lib/utils";
 
 const STAFF_UNASSIGNED = "__none__";
@@ -92,7 +93,7 @@ export function TaskDetailDialog({
   const [comments, setComments] = useState<ProjectTaskCommentRow[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
-  const [postingComment, setPostingComment] = useState(false);
+  const { isSubmitting: postingComment, run: runPostComment } = useSubmitLock();
 
   const status = mode === "edit" ? task?.status : initialStatus;
   const statusUi = status ? TASK_COLUMN_UI[status] : null;
@@ -115,24 +116,23 @@ export function TaskDetailDialog({
     if (!open) setCommentDraft("");
   }, [open, showComments, loadComments]);
 
-  const submitComment = async () => {
-    if (!task?.id) return;
-    if (!currentStaffMember) {
-      toast.error("Vincula tu cuenta con una persona en Personal (Configuración) para comentar.");
-      return;
-    }
-    if (!commentDraft.trim()) return;
-    setPostingComment(true);
-    const { data, error } = await createTaskComment(task.id, currentStaffMember.id, commentDraft);
-    setPostingComment(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (data) setComments((prev) => [...prev, data]);
-    setCommentDraft("");
-    toast.success("Comentario añadido");
-  };
+  const submitComment = () =>
+    void runPostComment(async () => {
+      if (!task?.id) return;
+      if (!currentStaffMember) {
+        toast.error("Vincula tu cuenta con una persona en Personal (Configuración) para comentar.");
+        return;
+      }
+      if (!commentDraft.trim()) return;
+      const { data, error } = await createTaskComment(task.id, currentStaffMember.id, commentDraft);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (data) setComments((prev) => [...prev, data]);
+      setCommentDraft("");
+      toast.success("Comentario añadido");
+    });
 
   const removeComment = async (id: string) => {
     const { error } = await deleteTaskComment(id);
@@ -360,7 +360,7 @@ export function TaskDetailDialog({
                   type="button"
                   className="w-full sm:w-auto"
                   disabled={!currentStaffMember || postingComment || !commentDraft.trim()}
-                  onClick={() => void submitComment()}
+                  onClick={submitComment}
                 >
                   {postingComment ? "Publicando…" : "Comentar"}
                 </Button>
@@ -371,7 +371,13 @@ export function TaskDetailDialog({
 
         <DialogFooter className="shrink-0 gap-3 border-t border-border bg-muted/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           {mode === "edit" && onDelete ? (
-            <Button type="button" variant="destructive" className="gap-2 w-full sm:w-auto" onClick={onDelete}>
+            <Button
+              type="button"
+              variant="destructive"
+              className="gap-2 w-full sm:w-auto"
+              disabled={saving}
+              onClick={onDelete}
+            >
               <Trash2 className="size-4" />
               Eliminar tarea
             </Button>
@@ -379,7 +385,13 @@ export function TaskDetailDialog({
             <div className="hidden sm:block" />
           )}
           <div className="flex w-full gap-3 sm:ml-auto sm:w-auto">
-            <Button type="button" variant="outline" className="flex-1 sm:flex-none" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 sm:flex-none"
+              disabled={saving}
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </Button>
             <Button type="button" className="flex-1 sm:min-w-[120px]" disabled={saving} onClick={onSave}>

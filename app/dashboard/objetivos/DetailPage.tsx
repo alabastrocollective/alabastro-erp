@@ -37,6 +37,7 @@ import {
   objectiveRemaining,
 } from "~/lib/objectiveUtils";
 import { STAT_TINT } from "~/lib/statCardStyles";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 import { cn, formatDateOnly } from "~/lib/utils";
 import {
   ObjectiveFormDialog,
@@ -53,7 +54,8 @@ export default function ObjetivoDetailPage() {
   const [objective, setObjective] = useState<ObjectiveRow | null>(null);
   const [entries, setEntries] = useState<ObjectiveProgressEntryRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingProgress, setSavingProgress] = useState(false);
+  const { isSubmitting: savingProgress, run: runSaveProgress } = useSubmitLock();
+  const { isSubmitting: savingEdit, run: runSaveEdit, reset: resetEditSave } = useSubmitLock();
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<ObjectiveFormValues | null>(null);
   const [progressForm, setProgressForm] = useState({
@@ -80,34 +82,33 @@ export default function ObjetivoDetailPage() {
     void load();
   }, [load]);
 
-  const saveProgress = async () => {
-    if (!objective) return;
-    const amount = Number(progressForm.amount);
-    if (Number.isNaN(amount) || amount <= 0) {
-      toast.error("Indica un monto de avance mayor a 0");
-      return;
-    }
-    if (!progressForm.occurred_on) {
-      toast.error("La fecha es obligatoria");
-      return;
-    }
-    setSavingProgress(true);
-    const { entry, objective: updated, error } = await createProgressEntry({
-      objective_id: objective.id,
-      amount,
-      description: progressForm.description || null,
-      occurred_on: progressForm.occurred_on,
+  const saveProgress = () =>
+    void runSaveProgress(async () => {
+      if (!objective) return;
+      const amount = Number(progressForm.amount);
+      if (Number.isNaN(amount) || amount <= 0) {
+        toast.error("Indica un monto de avance mayor a 0");
+        return;
+      }
+      if (!progressForm.occurred_on) {
+        toast.error("La fecha es obligatoria");
+        return;
+      }
+      const { entry, objective: updated, error } = await createProgressEntry({
+        objective_id: objective.id,
+        amount,
+        description: progressForm.description || null,
+        occurred_on: progressForm.occurred_on,
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (entry) setEntries((prev) => [entry, ...prev]);
+      if (updated) setObjective(updated);
+      setProgressForm({ amount: "", description: "", occurred_on: todayISODate() });
+      toast.success("Avance registrado");
     });
-    setSavingProgress(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (entry) setEntries((prev) => [entry, ...prev]);
-    if (updated) setObjective(updated);
-    setProgressForm({ amount: "", description: "", occurred_on: todayISODate() });
-    toast.success("Avance registrado");
-  };
 
   const removeEntry = async (entry: ObjectiveProgressEntryRow) => {
     if (!objective || !confirm("¿Eliminar este registro de avance?")) return;
@@ -121,22 +122,23 @@ export default function ObjetivoDetailPage() {
     toast.success("Registro eliminado");
   };
 
-  const saveEdit = async () => {
-    if (!objective || !form) return;
-    const parsed = parseObjectiveForm(form);
-    if (!parsed.ok) {
-      toast.error(parsed.message);
-      return;
-    }
-    const { data, error } = await updateObjective(objective.id, parsed.payload);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (data) setObjective(data);
-    toast.success("Objetivo actualizado");
-    setEditOpen(false);
-  };
+  const saveEdit = () =>
+    void runSaveEdit(async () => {
+      if (!objective || !form) return;
+      const parsed = parseObjectiveForm(form);
+      if (!parsed.ok) {
+        toast.error(parsed.message);
+        return;
+      }
+      const { data, error } = await updateObjective(objective.id, parsed.payload);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (data) setObjective(data);
+      toast.success("Objetivo actualizado");
+      setEditOpen(false);
+    });
 
   const remove = async () => {
     if (!objective || !confirm(`¿Eliminar «${objective.title}»?`)) return;
@@ -330,7 +332,7 @@ export default function ObjetivoDetailPage() {
               type="button"
               className="bg-accent-blue text-white hover:bg-accent-blue/90"
               disabled={savingProgress}
-              onClick={() => void saveProgress()}
+              onClick={saveProgress}
             >
               {savingProgress ? "Guardando…" : "Registrar avance"}
             </Button>
@@ -397,8 +399,12 @@ export default function ObjetivoDetailPage() {
       {form && editOpen && (
         <ObjectiveFormDialog
           open={editOpen}
-          onOpenChange={setEditOpen}
+          onOpenChange={(next) => {
+            setEditOpen(next);
+            if (!next) resetEditSave();
+          }}
           editing
+          saving={savingEdit}
           form={form}
           setForm={(updater) =>
             setForm((prev) => {
@@ -406,7 +412,7 @@ export default function ObjetivoDetailPage() {
               return typeof updater === "function" ? updater(prev) : updater;
             })
           }
-          onSave={() => void saveEdit()}
+          onSave={saveEdit}
         />
       )}
     </div>

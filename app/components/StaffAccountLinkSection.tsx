@@ -22,6 +22,7 @@ import {
 import { listStaffMembers } from "~/services/staffService";
 import { useAuthStore, type User } from "~/store/authStore";
 import { STAFF_CARGO_LABELS } from "~/lib/alabastroLabels";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 import type { StaffMemberRow } from "~/types/alabastro";
 
 const NONE = "__none__";
@@ -31,7 +32,7 @@ export function StaffAccountLinkSection() {
   const { staffMember, suggestedByEmail, loading, reload } = useCurrentStaffMember();
   const [allStaff, setAllStaff] = useState<StaffMemberRow[]>([]);
   const [selectedId, setSelectedId] = useState<string>(NONE);
-  const [saving, setSaving] = useState(false);
+  const { isSubmitting: saving, run: runSave } = useSubmitLock();
 
   useEffect(() => {
     void listStaffMembers().then(({ data }) => setAllStaff(data));
@@ -43,10 +44,9 @@ export function StaffAccountLinkSection() {
     else setSelectedId(NONE);
   }, [staffMember?.id, suggestedByEmail?.id]);
 
-  const saveLink = async () => {
+  const saveLink = () =>
+    void runSave(async () => {
     if (!user?.id) return;
-    setSaving(true);
-    try {
       if (selectedId === NONE) {
         if (staffMember) {
           const { error } = await unlinkAuthUserFromStaffMember(staffMember.id);
@@ -77,10 +77,7 @@ export function StaffAccountLinkSection() {
         });
       }
       await reload();
-    } finally {
-      setSaving(false);
-    }
-  };
+    });
 
   const linkableStaff = allStaff.filter(
     (s) => !s.auth_user_id || s.auth_user_id === user?.id
@@ -137,7 +134,7 @@ export function StaffAccountLinkSection() {
         </p>
       </div>
 
-      <Button type="button" disabled={saving || loading} onClick={() => void saveLink()}>
+      <Button type="button" disabled={saving || loading} onClick={saveLink}>
         {saving ? "Guardando…" : "Guardar vinculación"}
       </Button>
     </div>

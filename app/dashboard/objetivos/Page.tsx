@@ -10,6 +10,7 @@ import type { ObjectiveRow, ObjectiveStatus } from "~/types/alabastro";
 import { OBJECTIVE_STATUS_LABELS } from "~/lib/alabastroLabels";
 import type { ObjectiveFilter } from "~/lib/objectiveUtils";
 import { STAT_TINT } from "~/lib/statCardStyles";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 import { cn } from "~/lib/utils";
 import { ObjectiveCard } from "~/dashboard/objetivos/ObjectiveCard";
 import {
@@ -30,6 +31,7 @@ export default function ObjetivosPage() {
   const [rows, setRows] = useState<ObjectiveRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ObjectiveFilter>("todas");
+  const { isSubmitting: saving, run: runSave, reset: resetSave } = useSubmitLock();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ObjectiveRow | null>(null);
   const [form, setForm] = useState<ObjectiveFormValues>(emptyObjectiveForm);
@@ -65,29 +67,35 @@ export default function ObjetivosPage() {
     setOpen(true);
   };
 
-  const save = async () => {
-    const parsed = parseObjectiveForm(form);
-    if (!parsed.ok) {
-      toast.error(parsed.message);
-      return;
-    }
-    if (editing) {
-      const { error } = await updateObjective(editing.id, parsed.payload);
-      if (error) {
-        toast.error(error.message);
+  const save = () =>
+    void runSave(async () => {
+      const parsed = parseObjectiveForm(form);
+      if (!parsed.ok) {
+        toast.error(parsed.message);
         return;
       }
-      toast.success("Objetivo actualizado");
-    } else {
-      const { error } = await createObjective(parsed.payload);
-      if (error) {
-        toast.error(error.message);
-        return;
+      if (editing) {
+        const { error } = await updateObjective(editing.id, parsed.payload);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Objetivo actualizado");
+      } else {
+        const { error } = await createObjective(parsed.payload);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Objetivo creado");
       }
-      toast.success("Objetivo creado");
-    }
-    setOpen(false);
-    void load();
+      setOpen(false);
+      void load();
+    });
+
+  const onDialogOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) resetSave();
   };
 
   return (
@@ -106,6 +114,7 @@ export default function ObjetivosPage() {
         </div>
         <Button
           onClick={openCreate}
+          disabled={saving}
           className="gap-2 shrink-0 bg-accent-blue text-white hover:bg-accent-blue/90"
         >
           <Plus className="size-4" />
@@ -167,11 +176,12 @@ export default function ObjetivosPage() {
 
       <ObjectiveFormDialog
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={onDialogOpenChange}
         editing={!!editing}
+        saving={saving}
         form={form}
         setForm={setForm}
-        onSave={() => void save()}
+        onSave={save}
       />
     </div>
   );

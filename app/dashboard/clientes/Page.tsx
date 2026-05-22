@@ -17,6 +17,7 @@ import { Label } from "~/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import { Textarea } from "~/components/ui/textarea";
 import { createClient, deleteClient, listClients, updateClient } from "~/services/clientsService";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 import type { ClientRow } from "~/types/alabastro";
 
 const emptyForm = { name: "", phone: "", email: "", notes: "" };
@@ -24,6 +25,7 @@ const emptyForm = { name: "", phone: "", email: "", notes: "" };
 export default function ClientesPage() {
   const [rows, setRows] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isSubmitting: saving, run: runSave, reset: resetSave } = useSubmitLock();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ClientRow | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -57,28 +59,34 @@ export default function ClientesPage() {
     setOpen(true);
   };
 
-  const save = async () => {
-    if (!form.name.trim()) {
-      toast.error("El nombre es obligatorio");
-      return;
-    }
-    if (editing) {
-      const { error } = await updateClient(editing.id, form);
-      if (error) {
-        toast.error(error.message);
+  const save = () =>
+    void runSave(async () => {
+      if (!form.name.trim()) {
+        toast.error("El nombre es obligatorio");
         return;
       }
-      toast.success("Cliente actualizado");
-    } else {
-      const { error } = await createClient(form);
-      if (error) {
-        toast.error(error.message);
-        return;
+      if (editing) {
+        const { error } = await updateClient(editing.id, form);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Cliente actualizado");
+      } else {
+        const { error } = await createClient(form);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Cliente creado");
       }
-      toast.success("Cliente creado");
-    }
-    setOpen(false);
-    void load();
+      setOpen(false);
+      void load();
+    });
+
+  const onDialogOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) resetSave();
   };
 
   const remove = async (c: ClientRow) => {
@@ -145,7 +153,7 @@ export default function ClientesPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={onDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar cliente" : "Nuevo cliente"}</DialogTitle>
@@ -174,11 +182,11 @@ export default function ClientesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" disabled={saving} onClick={() => onDialogOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={() => void save()}>
-              Guardar
+            <Button type="button" disabled={saving} onClick={save}>
+              {saving ? "Guardando…" : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -42,6 +42,7 @@ interface ObjectiveFormDialogProps {
   form: ObjectiveFormValues;
   setForm: React.Dispatch<React.SetStateAction<ObjectiveFormValues>>;
   onSave: () => void;
+  saving?: boolean;
 }
 
 export function ObjectiveFormDialog({
@@ -51,6 +52,7 @@ export function ObjectiveFormDialog({
   form,
   setForm,
   onSave,
+  saving = false,
 }: ObjectiveFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -166,15 +168,16 @@ export function ObjectiveFormDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" disabled={saving} onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button
             type="button"
             className="bg-accent-blue text-white hover:bg-accent-blue/90"
+            disabled={saving}
             onClick={onSave}
           >
-            {editing ? "Guardar cambios" : "Crear objetivo"}
+            {saving ? "Guardando…" : editing ? "Guardar cambios" : "Crear objetivo"}
           </Button>
         </DialogFooter>
       </DialogContent>

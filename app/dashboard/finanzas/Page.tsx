@@ -57,6 +57,7 @@ import {
   INGRESO_CATEGORIES,
   categoryLabel,
 } from "~/lib/finanzasLabels";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 import { formatUsd, cn } from "~/lib/utils";
 
 const PAY_METHODS: PaymentMethod[] = ["efectivo", "paypal", "pago_movil", "transferencia", "otro"];
@@ -119,6 +120,7 @@ export default function FinanzasPage() {
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isSubmitting: saving, run: runSave, reset: resetSave } = useSubmitLock();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialMovementRow | null>(null);
   const [form, setForm] = useState({
@@ -207,43 +209,49 @@ export default function FinanzasPage() {
     setOpen(true);
   };
 
-  const save = async () => {
-    const amount = Number(form.amount_usd);
-    if (Number.isNaN(amount) || amount < 0) {
-      toast.error("Monto inválido (USD)");
-      return;
-    }
-    const payload = {
-      movement_type: form.movement_type,
-      amount_usd: amount,
-      occurred_on: form.occurred_on,
-      category: form.category || null,
-      payment_method:
-        form.movement_type === "ingreso" && form.payment_method !== "__none__"
-          ? (form.payment_method as PaymentMethod)
-          : null,
-      project_id: form.project_id === "__none__" ? null : form.project_id,
-      client_id: form.client_id === "__none__" ? null : form.client_id,
-      notes: form.notes || null,
-    };
+  const save = () =>
+    void runSave(async () => {
+      const amount = Number(form.amount_usd);
+      if (Number.isNaN(amount) || amount < 0) {
+        toast.error("Monto inválido (USD)");
+        return;
+      }
+      const payload = {
+        movement_type: form.movement_type,
+        amount_usd: amount,
+        occurred_on: form.occurred_on,
+        category: form.category || null,
+        payment_method:
+          form.movement_type === "ingreso" && form.payment_method !== "__none__"
+            ? (form.payment_method as PaymentMethod)
+            : null,
+        project_id: form.project_id === "__none__" ? null : form.project_id,
+        client_id: form.client_id === "__none__" ? null : form.client_id,
+        notes: form.notes || null,
+      };
 
-    if (editing) {
-      const { error } = await updateMovement(editing.id, payload);
-      if (error) {
-        toast.error(error.message);
-        return;
+      if (editing) {
+        const { error } = await updateMovement(editing.id, payload);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Movimiento actualizado");
+      } else {
+        const { error } = await createMovement(payload);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success(form.movement_type === "ingreso" ? "Entrada registrada" : "Salida registrada");
       }
-      toast.success("Movimiento actualizado");
-    } else {
-      const { error } = await createMovement(payload);
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success(form.movement_type === "ingreso" ? "Entrada registrada" : "Salida registrada");
-    }
-    setOpen(false);
-    void load();
+      setOpen(false);
+      void load();
+    });
+
+  const onDialogOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) resetSave();
   };
 
   const remove = async (row: FinancialMovementRow) => {
@@ -286,6 +294,7 @@ export default function FinanzasPage() {
           <Button
             type="button"
             className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+            disabled={saving}
             onClick={() => openCreate("ingreso")}
           >
             <Plus className="size-4" />
@@ -294,6 +303,7 @@ export default function FinanzasPage() {
           <Button
             type="button"
             className="gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+            disabled={saving}
             onClick={() => openCreate("egreso")}
           >
             <Plus className="size-4" />
@@ -405,6 +415,7 @@ export default function FinanzasPage() {
               fondoAnterior={b.fondoAnteriorUsd}
               totalLabel="TOTAL ENTRADAS"
               totalAmount={b.fondoAnteriorUsd + b.totalEntradasUsd}
+              actionsDisabled={saving}
               onAdd={() => openCreate("ingreso")}
               onEdit={openEdit}
               onRemove={remove}
@@ -415,6 +426,7 @@ export default function FinanzasPage() {
               rows={salidas}
               totalLabel="TOTAL SALIDAS"
               totalAmount={b.totalSalidasUsd}
+              actionsDisabled={saving}
               onAdd={() => openCreate("egreso")}
               onEdit={openEdit}
               onRemove={remove}
@@ -449,7 +461,7 @@ export default function FinanzasPage() {
         </>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={onDialogOpenChange}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -559,11 +571,11 @@ export default function FinanzasPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" disabled={saving} onClick={() => onDialogOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={() => void save()}>
-              Guardar
+            <Button type="button" disabled={saving} onClick={save}>
+              {saving ? "Guardando…" : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -582,6 +594,7 @@ function MovementSection({
   onAdd,
   onEdit,
   onRemove,
+  actionsDisabled,
 }: {
   title: string;
   variant: "ingreso" | "egreso";
@@ -589,6 +602,7 @@ function MovementSection({
   fondoAnterior?: number;
   totalLabel: string;
   totalAmount: number;
+  actionsDisabled?: boolean;
   onAdd: () => void;
   onEdit: (row: FinancialMovementRow) => void;
   onRemove: (row: FinancialMovementRow) => void;
@@ -618,7 +632,7 @@ function MovementSection({
           <Icon className="size-5" />
           {title}
         </h2>
-        <Button type="button" variant="outline" size="sm" className="gap-1 h-8" onClick={onAdd}>
+        <Button type="button" variant="outline" size="sm" className="gap-1 h-8" disabled={actionsDisabled} onClick={onAdd}>
           <Plus className="size-3.5" />
           Agregar
         </Button>

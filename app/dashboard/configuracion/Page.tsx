@@ -19,6 +19,7 @@ import {
   suggestAvatarColorId,
   type AvatarColorPresetId,
 } from "~/lib/avatarUi";
+import { useSubmitLock } from "~/hooks/useSubmitLock";
 
 type UserMeta = {
   full_name?: string;
@@ -39,12 +40,12 @@ export default function ConfiguracionPage() {
   const [avatarUrl, setAvatarUrl] = useState(meta.avatar_url ?? "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
-  const [savingProfile, setSavingProfile] = useState(false);
+  const { isSubmitting: savingProfile, run: runSaveProfile } = useSubmitLock();
 
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [newPw2, setNewPw2] = useState("");
-  const [savingPw, setSavingPw] = useState(false);
+  const { isSubmitting: savingPw, run: runSavePw } = useSubmitLock();
 
   useEffect(() => {
     const m = (user?.user_metadata ?? {}) as UserMeta;
@@ -55,10 +56,9 @@ export default function ConfiguracionPage() {
     setPendingAvatarFile(null);
   }, [user?.id]);
 
-  const submitProfile = async () => {
+  const submitProfile = () =>
+    void runSaveProfile(async () => {
     if (!user?.id) return;
-    setSavingProfile(true);
-    try {
       let nextUrl = avatarUrl || null;
       const colorId = avatarColor || suggestAvatarColorId(fullName || user.email || "U");
 
@@ -93,13 +93,11 @@ export default function ConfiguracionPage() {
       setPendingAvatarFile(null);
       setAvatarPreview(null);
       toast.success("Perfil actualizado");
-    } finally {
-      setSavingProfile(false);
-    }
-  };
+    });
 
-  const submitPassword = async (e: React.FormEvent) => {
+  const submitPassword = (e: React.FormEvent) => {
     e.preventDefault();
+    void runSavePw(async () => {
     if (!user?.email) return;
     if (newPw.length < 6) {
       toast.error("La nueva contraseña debe tener al menos 6 caracteres");
@@ -109,8 +107,6 @@ export default function ConfiguracionPage() {
       toast.error("Las contraseñas nuevas no coinciden");
       return;
     }
-    setSavingPw(true);
-    try {
       const { error } = await changePasswordWithCurrent(user.email, currentPw, newPw);
       if (error) {
         toast.error(error.message ?? "No se pudo actualizar");
@@ -120,9 +116,7 @@ export default function ConfiguracionPage() {
       setCurrentPw("");
       setNewPw("");
       setNewPw2("");
-    } finally {
-      setSavingPw(false);
-    }
+    });
   };
 
   return (
@@ -248,7 +242,7 @@ export default function ConfiguracionPage() {
               <p className="text-sm text-muted-foreground">
                 Correo: {user?.email ?? "—"} · Rol: {user ? getAppRole(user) : "—"}
               </p>
-              <Button type="button" disabled={savingProfile} onClick={() => void submitProfile()}>
+              <Button type="button" disabled={savingProfile} onClick={submitProfile}>
                 {savingProfile ? "Guardando…" : "Guardar perfil"}
               </Button>
             </div>
